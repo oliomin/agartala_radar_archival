@@ -8,14 +8,21 @@ import io
 import os
 
 class HashStore:
-	def __init__(self, filepath):
+	def __init__(self, filepath, MAX_LINE_LIMIT = 30):
 		self.hash_store = set()
 		self.filepath = filepath
-		
+
 		try:
 			with open(filepath, 'r') as file:
-				for line in file:
+				lines = file.readlines()
+				lines = lines[-MAX_LINE_LIMIT:]
+				for line in lines:
 					self.hash_store.update((line,))
+
+			with open(filepath, 'w+') as file:
+				for line in lines:
+					file.write(line)
+
 		except FileNotFoundError:
 			with open(filepath, 'w+') as file:
 				...
@@ -23,7 +30,7 @@ class HashStore:
 	def update(self, digest):
 		self.hash_store.update((digest,))
 		with open(self.filepath, 'a+') as file:
-			file.write(f'\n{digest}')
+			file.write(f'{digest}\n')
 
 	def __contains__(self, item):
 		return item in self.hash_store
@@ -65,5 +72,4 @@ class Archival:
 x = Archival(url = 'https://mausam.imd.gov.in/Radar/caz_agt.gif', save_dir = '.', interval = 30, prefix = 'agartala radar',
 			suffix = '.gif',
 			hash_store_path = 'hashstore.txt')
-# print(x.poll_site())
 asyncio.run(x.poll_site())
